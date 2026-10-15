@@ -1,0 +1,65 @@
+<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>面談流程 決策時間軸</title><style>:root{--bg:#f1ede6;--card:#faf8f4;--ink:#3b3835;--mute:#6b645c;--line:#d9d1c5;--t:#6b645c;--tb:#ebe7e0;--go:#4d6a5a;--hr:#4a6481;--hrb:#dce4ec;--mgr:#98574a;--mgrb:#efdad2;--cand:#75607e;--candb:#e6deea;--key:#8f6422}
+@media(prefers-color-scheme:dark){:root{--bg:#25231f;--card:#2f2c27;--ink:#ece6dd;--mute:#b5ada1;--line:#4a453d;--t:#c4bcb0;--tb:#3a3731;--go:#a9c4b3;--hr:#a4bdd3;--hrb:#2f3b47;--mgr:#e0b4a5;--mgrb:#4a3730;--cand:#c9b6d1;--candb:#3e3544;--key:#e0b872}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 16px 48px}h1{font-size:1.5rem;margin:0 0 4px}.lead{color:var(--mute);margin:0 0 20px}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;margin:0 0 20px;font-size:.9rem}.legend span{display:inline-flex;align-items:center;gap:6px}
+.dot{width:12px;height:12px;border-radius:3px;border:2px solid}
+.c-t{--c:var(--t);--cb:var(--tb)}.c-hr{--c:var(--hr);--cb:var(--hrb)}.c-mgr{--c:var(--mgr);--cb:var(--mgrb)}.c-cand{--c:var(--cand);--cb:var(--candb)}
+.dot{border-color:var(--c);background:var(--cb)}
+.node{background:var(--cb);border:2px solid var(--c);border-radius:12px;padding:10px 14px;min-height:44px}
+.node b{display:block;font-size:1rem}.node small{display:block;color:var(--mute);font-size:.85rem}
+.node .who{font-size:.75rem;font-weight:700;color:var(--c);letter-spacing:.04em}
+.key{box-shadow:0 0 0 3px var(--key)}
+.tip{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--key);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:.92rem}
+:focus-visible{outline:3px solid var(--hr);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+.wrap{max-width:720px}
+.sel{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:24px}
+.sel button{min-height:56px;text-align:left;padding:10px 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.sel button[aria-pressed=true]{border-color:var(--hr);background:var(--hrb)}.sel small{display:block;color:var(--mute)}
+h2{font-size:1.05rem;margin:24px 0 8px}
+.tl{list-style:none;margin:0;padding:0 0 0 28px;border-left:3px solid var(--line)}
+.tl li{position:relative;padding:0 0 14px 14px}
+.tl li::before{content:attr(data-n);position:absolute;left:-43px;top:6px;width:26px;height:26px;border-radius:50%;background:var(--c);color:var(--bg);font-size:.8rem;font-weight:700;display:grid;place-items:center}
+.branch{margin:0 0 14px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.branch div{border-radius:12px;padding:10px 14px;border:2px dashed var(--line);background:var(--card);font-size:.92rem}
+.branch .go{border-color:var(--go)}.branch .stop{border-color:var(--mgr)}
+.branch b{display:block}
+@media(max-width:520px){.branch{grid-template-columns:1fr}}
+.foot{margin-top:32px;text-align:center;font-size:.8rem;color:var(--mute);opacity:.75}
+.pt{font-size:1.3rem;margin:0 0 6px}
+body.all .sel,body.all .lead,body.all .legend,body:not(.all) .pt{display:none}
+body.all .wrap>h1:first-child{display:none}
+@media print{@page{size:A4;margin:20mm 12mm 12mm}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body.all .pg{break-after:page}body.all .pg:last-of-type{break-after:auto}
+body.all{zoom:.72}body.all .legend{display:flex}.tl li{break-inside:avoid}}
+</style></head><body><div class="wrap">
+<h1>面談流程 · 決策時間軸</h1><p class="lead">選擇職務，由上而下依序進行；主管提問後有「繼續 / 交棒 HR」的分流。</p>
+<div class="legend"><span><i class="dot c-t"></i>測驗</span><span><i class="dot c-hr"></i>HR</span><span><i class="dot c-mgr"></i>主管</span><span><i class="dot c-cand"></i>面試者</span></div>
+<div class="sel" id="sel"></div><div id="out"></div>
+<script>const ROLES=[
+{id:'pg',name:'PG',sub:'一般考題',tests:[['上機測驗','一般考題','t'],['紙本測驗','','t']],note:'有上機測驗且通過者',ai:false},
+{id:'pgai',name:'PG',sub:'AI 考題',tests:[['紙本測驗','','t'],['上機測驗','AI 考題','t']],note:'上機(AI考題)後固定接面談，避免人選有多餘時間讓 AI 跑完題目',ai:true},
+{id:'qa',name:'QA',sub:'QA 考題',tests:[['上機測驗','QA 考題','t'],['紙本測驗','','t']],note:'',ai:false},
+{id:'other',name:'其他職務',sub:'無需上機',tests:[['紙本測驗','','t']],note:'',ai:false}];
+const INTERVIEW=(ai)=>{const s=[['HR 開場說明','','hr'],['面試者自我介紹','','cand']];
+if(ai)s.push(['主管覆盤 AI 考題','','mgr']);
+s.push(['主管提問','','mgr','key'],['HR 提問','','hr'],['面試者提問','','cand'],['HR 介紹福利制度','確認薪資 & 報到時間','hr']);return s;};
+const WHO={t:'測驗',hr:'HR',mgr:'主管',cand:'面試者'};
+const TIP_ORDER='先主管提問、後 HR 提問：主管簡單詢問後，若不需要該人選或有其他會議，可直接把面談時間交給 HR 收尾。';
+const TIP_FLEX='測驗各環節皆可視情況彈性調整。';
+
+const sel=document.getElementById('sel'),out=document.getElementById('out');
+const li=(s,i)=>`<li data-n="${i}" class="c-${s[2]}"><div class="node ${s[3]?'key':''}"><span class="who">${WHO[s[2]]}</span><b>${s[0]}</b>${s[1]?`<small>${s[1]}</small>`:''}</div></li>`;
+function body(k,title){const r=ROLES[k];let i=0;
+const iv=INTERVIEW(r.ai),at=iv.findIndex(s=>s[3]);
+return `${title?`<h1 class="pt">${title}</h1>`:''}<h2>測驗階段</h2><div class="tip">${TIP_FLEX}</div>${r.note?`<div class="tip">${r.note}</div>`:''}<ol class="tl">${r.tests.map(s=>li(s,++i)).join('')}</ol>
+<h2>面談階段</h2><ol class="tl">${iv.slice(0,at+1).map(s=>li(s,++i)).join('')}</ol>
+<div class="branch"><div class="stop"><b>主管無需進一步面談</b>主管離場，面談時間直接交給 HR 收尾</div><div class="go"><b>繼續依序進行</b>HR 接著提問</div></div>
+<ol class="tl">${iv.slice(at+1).map(s=>li(s,++i)).join('')}</ol><div class="tip"><b>順序調整：</b>${TIP_ORDER}</div>`}
+function show(k){[...sel.children].forEach((b,j)=>b.setAttribute('aria-pressed',j==k));out.innerHTML=body(k)}
+ROLES.forEach((r,k)=>{const b=document.createElement('button');b.innerHTML=`<b>${r.name}</b><small>${r.sub}</small>`;b.onclick=()=>show(k);sel.append(b)});
+if(location.hash==='#all'){document.body.classList.add('all');out.innerHTML=ROLES.map((r,k)=>`<section class="pg">${body(k,`面談流程 · ${r.name}（${r.sub}）`)}</section>`).join('')}
+else show(parseInt(location.hash.slice(1))||0);
+</script><footer class="foot">鴻揚科技 人資部 202610版</footer></div></body></html>
